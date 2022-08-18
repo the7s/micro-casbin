@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
-	xormadapter "github.com/casbin/xorm-adapter/v2"
+	gormadapter "github.com/casbin/gorm-adapter/v3"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
 )
@@ -12,32 +12,16 @@ import (
 func main() {
 
 	// Initialize a Xorm adapter with MySQL database.
-	a, err := xormadapter.NewAdapter("mysql", "root:123456@tcp(127.0.0.1:3306)/")
+	a, err := gormadapter.NewAdapter("mysql", "root:123456@tcp(127.0.0.1:3306)/")
 	if err != nil {
 		log.Fatalf("error: adapter: %s", err)
 	}
-
-	m, err := model.NewModelFromString(`
-		[request_definition]
-		r = sub, obj, act
-		
-		[policy_definition]
-		p = sub, obj, act
-		
-		[policy_effect]
-		e = some(where (p.eft == allow))
-		
-		[matchers]
-		m = r.sub == p.sub && r.obj == p.obj && r.act == p.act
-		`)
-	if err != nil {
-		log.Fatalf("error: model: %s", err)
-	}
+	m, _ := model.NewModelFromFile("conf/basic_model.conf")
 
 	e, err := casbin.NewEnforcer(m, a)
+
 	if err != nil {
 		log.Fatalf("error: enforcer: %s", err)
 	}
 	fmt.Println(e)
-
 }
